@@ -110,7 +110,7 @@ const fetchSingleData = (req, res) => {
         })
     }
 
-    // getDataOnly(i)
+    getDataOnly(req.symbol)
 
     indices.map(i => {
         getDataOnly(i)
