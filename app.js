@@ -10,7 +10,7 @@ const axios = require('axios').default
 const Data = require("./models/data");
 
 const dataRoutes = require("./routes/data")
-const { indices, URLChanger } = require("./controllers/data")
+const { indices, URLChanger, getDataOnly } = require("./controllers/data")
 
 // DB Connection
 mongoose.connect(process.env.MONGO_URI).then(() => {
@@ -93,31 +93,9 @@ app.listen(port, () => {
         if(marketCondn)
         {
             console.log('market started')
+            
             indices.map((i) => {
-
-                axios.get(URLChanger(i))
-                .then(respo => {
-                    let cmp = respo.data['records']['data'][0].hasOwnProperty('PE') ? respo.data['records']['data'][0]['PE']['underlyingValue'] : respo.data['records']['data'][0]['CE']['underlyingValue'];
-                    let foo = respo.data['filtered']
-
-
-                    let CE = foo["CE"]
-                    let PE = foo["PE"]
-                    let d = new Date();
-                    newRecordN.time = d
-                    newRecordN.totalCE = CE['totOI']
-                    newRecordN.totalPE = PE['totOI'];
-                    newRecordN.pcr = (Math.floor(PE['totOI'] / CE['totOI'] * 1000) / 1000).toFixed(3);
-                    newRecordN.ltp = cmp
-                    newRecordN.sym = i
-                    oldRecordN = newRecordN;
-
-                    // Create data to DB
-                    createData(newRecordN)
-        
-                })
-                .catch(err => console.log('ERROR - from app.js'))
-
+                getDataOnly(i);
             })
 
         }
