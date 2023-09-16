@@ -1,9 +1,12 @@
 const axios = require('axios').default
 const Data = require("../models/data");
 
+let mycookie = null;
+
 // var indices = ['NIFTY', 'BANKNIFTY', 'FINNIFTY', 'AARTIIND', 'ABB', 'ABBOTINDIA', 'ABCAPITAL', 'ABFRL', 'ACC', 'ADANIENT', 'ADANIPORTS', 'ALKEM', 'AMBUJACEM', 'APOLLOHOSP', 'APOLLOTYRE', 'ASHOKLEY', 'ASIANPAINT', 'ASTRAL', 'ATUL', 'AUBANK', 'AUROPHARMA', 'AXISBANK', 'BAJAJ-AUTO', 'BAJAJFINSV', 'BAJFINANCE', 'BALKRISIND', 'BALRAMCHIN', 'BANDHANBNK', 'BANKBARODA', 'BATAINDIA', 'BEL', 'BERGEPAINT', 'BHARATFORG', 'BHARTIARTL', 'BHEL', 'BIOCON', 'BOSCHLTD', 'BPCL', 'BRITANNIA', 'BSOFT', 'CANBK', 'CANFINHOME', 'CHAMBLFERT', 'CHOLAFIN', 'CIPLA', 'COALINDIA', 'COFORGE', 'COLPAL', 'CONCOR', 'COROMANDEL', 'CROMPTON', 'CUB', 'CUMMINSIND', 'DABUR', 'DALBHARAT', 'DEEPAKNTR', 'DELTACORP', 'DIVISLAB', 'DIXON', 'DLF', 'DRREDDY', 'EICHERMOT', 'ESCORTS', 'EXIDEIND', 'FEDERALBNK', 'GAIL', 'GLENMARK', 'GMRINFRA', 'GNFC', 'GODREJCP', 'GODREJPROP', 'GRANULES', 'GRASIM', 'GUJGASLTD', 'HAL', 'HAVELLS', 'HCLTECH', 'HDFC', 'HDFCAMC', 'HDFCBANK', 'HDFCLIFE', 'HEROMOTOCO', 'HINDALCO', 'HINDCOPPER', 'HINDPETRO', 'HINDUNILVR', 'IBULHSGFIN', 'ICICIBANK', 'ICICIGI', 'ICICIPRULI', 'IDEA', 'IDFC', 'IDFCFIRSTB', 'IEX', 'IGL', 'INDHOTEL', 'INDIACEM', 'INDIAMART', 'INDIGO', 'INDUSINDBK', 'INDUSTOWER', 'INFY', 'INTELLECT', 'IOC', 'IPCALAB', 'IRCTC', 'ITC', 'JINDALSTEL', 'JKCEMENT', 'JSWSTEEL', 'JUBLFOOD', 'KOTAKBANK', 'L&TFH', 'LALPATHLAB', 'LAURUSLABS', 'LICHSGFIN', 'LT', 'LTIM', 'LTTS', 'LUPIN', 'M&M', 'M&MFIN', 'MANAPPURAM', 'MARICO', 'MARUTI', 'MCDOWELL-N', 'MCX', 'METROPOLIS', 'MFSL', 'MGL', 'MOTHERSON', 'MPHASIS', 'MRF', 'MUTHOOTFIN', 'NATIONALUM', 'NAUKRI', 'NAVINFLUOR', 'NESTLEIND', 'NMDC', 'NTPC', 'OBEROIRLTY', 'OFSS', 'ONGC', 'PAGEIND', 'PEL', 'PERSISTENT', 'PETRONET', 'PFC', 'PIDILITIND', 'PIIND', 'PNB', 'POLYCAB', 'POWERGRID', 'PVR', 'PVRINOX', 'RAIN', 'RAMCOCEM', 'RBLBANK', 'RECLTD', 'RELIANCE', 'SAIL', 'SBICARD', 'SBILIFE', 'SBIN', 'SHREECEM', 'SHRIRAMFIN', 'SIEMENS', 'SRF', 'SUNPHARMA', 'SUNTV', 'SYNGENE', 'TATACHEM', 'TATACOMM', 'TATACONSUM', 'TATAMOTORS', 'TATAPOWER', 'TATASTEEL', 'TCS', 'TECHM', 'TITAN', 'TORNTPHARM', 'TRENT', 'TVSMOTOR', 'UBL', 'ULTRACEMCO', 'UPL', 'VEDL', 'VOLTAS', 'WIPRO', 'ZEEL', 'ZYDUSLIFE'];
 
 const indices = ['NIFTY', 'BANKNIFTY', 'FINNIFTY', 'NIFTYMDCAP'];
+
 
 const URLChanger = (sym) => {
     if(sym == 'NIFTY' || sym == 'BANKNIFTY' || sym == 'FINNIFTY' || sym == 'NIFTYMDCAP')
@@ -108,30 +111,12 @@ const fetchSingleData = (req, res) => {
     }
 
 
-
-    axios.get(URLChanger(req.symbol))
-        .then(respo => {
-            let cmp = respo.data['records']['data'][0].hasOwnProperty('PE') ? respo.data['records']['data'][0]['PE']['underlyingValue'] : respo.data['records']['data'][0]['CE']['underlyingValue'];
-            let foo = respo.data['filtered']
-            let CE = foo["CE"]
-            let PE = foo["PE"]
-            let d = new Date();
-            newRecordN.time = d
-            newRecordN.totalCE = CE['totOI']
-            newRecordN.totalPE = PE['totOI'];
-            newRecordN.pcr = (Math.floor(PE['totOI'] / CE['totOI'] * 1000) / 1000).toFixed(3);
-            newRecordN.ltp = cmp
-            newRecordN.sym = i
-            console.log(newRecordN)
-            oldRecordN = newRecordN;
-            createData(newRecordN)
-
-        })
-        .catch(err => console.log('ERROR - controller'))
+    indices.map(i => {
+        // console.log(i)
+        getDataOnly(i)
+    }) 
 
     
-
-
 
     Data.find({ sym : req.symbol }).exec((err, dat) => {
         if(err || !dat)
@@ -140,10 +125,85 @@ const fetchSingleData = (req, res) => {
                 error: "Unable to fetch data from DB"
             })
         }
-        res.json(dat);
+        return res.json(dat);
     })
 
+}
 
+
+
+const getDataOnly = async (symbol) => {
+
+    axios.get(URLChanger(symbol), {
+        headers:
+        {
+            'cookie': await setCookieIfNotSet()
+        }
+    })
+    .then(respo => {
+
+        if(Object.keys(respo.data).length == 0)
+        {
+            console.log('EMPTY DATA - ' + symbol)
+            return;
+        }
+        let cmp = respo.data['records']['data'][0].hasOwnProperty('PE') ? respo.data['records']['data'][0]['PE']['underlyingValue'] : respo.data['records']['data'][0]['CE']['underlyingValue'];
+        let foo = respo.data['filtered']
+        let CE = foo["CE"]
+        let PE = foo["PE"]
+        let d = new Date();
+        newRecordN.time = d
+        newRecordN.totalCE = CE['totOI']
+        newRecordN.totalPE = PE['totOI'];
+        newRecordN.pcr = (Math.floor(PE['totOI'] / CE['totOI'] * 1000) / 1000).toFixed(3);
+        newRecordN.ltp = cmp
+        newRecordN.sym = symbol
+        oldRecordN = newRecordN;
+        createData(newRecordN)
+
+        // console.log(newRecordN)
+
+    })
+    .catch(err => 
+    { 
+        mycookie = null;
+        // console.log(err)
+        console.log('ERROR - from controller')
+    })
+}
+
+const setCookieIfNotSet = () => {
+    
+    return new Promise((resolve, reject) => {
+        
+        if(mycookie == null)
+        {
+            axios.get('https://www.nseindia.com/', {
+                withCredentials: true,
+              }).then
+            ((initresp) => {
+                return resolve(getCookieString(initresp));
+            })
+        }
+        return mycookie;
+    })
+}
+
+
+const getCookieString = (fullresp) => {
+    return allCookiesValuesOnly(fullresp.headers['set-cookie']).join(";")
+}
+
+const allCookiesValuesOnly = (cookies) => 
+{
+    return cookies.map(c => {
+        return getCookieValueOnly(c);
+    })
+}
+
+const getCookieValueOnly = (cookie) =>
+{
+    return cookie.split("; ")[0]
 }
 
 
