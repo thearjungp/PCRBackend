@@ -13,7 +13,7 @@ const dataRoutes = require("./routes/data")
 const { indices, URLChanger, getDataOnly } = require("./controllers/data")
 
 // DB Connection
-mongoose.connect(process.env.MONGO_URI).then(() => {
+mongoose.connect('mongodb://localhost:27017/PCR').then(() => {
     console.log("DB Connection succesful")
 })
 
