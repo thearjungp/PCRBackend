@@ -6,6 +6,6 @@ const { getDataForSymbol, readSymbol, fetchSingleData, dropDatabase } = require(
 router.param('symbol', readSymbol);
 router.get('/fetchsingledata/:symbol', readSymbol, fetchSingleData);
 router.get('/fetchdata/:symbol', readSymbol, getDataForSymbol);
-router.delete('/dropdatabase', dropDatabase)
+router.delete('/dropdatabase', dropDatabase);
 
 module.exports = router;

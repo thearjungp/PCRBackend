@@ -10,6 +10,8 @@ const axios = require('axios').default
 const Data = require("./models/data");
 
 const dataRoutes = require("./routes/data")
+const stockentryRoutes = require("./routes/stockentry")
+
 const { indices, URLChanger, getDataOnly } = require("./controllers/data")
 
 // DB Connection
@@ -26,6 +28,8 @@ app.use(express.static(path.resolve(__dirname, './client')));
 
 // Routes
 app.use('/api/v1', dataRoutes);
+app.use('/api/v1', stockentryRoutes);
+
 
 
 app.get('*', (req, res) => {
@@ -76,7 +80,7 @@ app.listen(port, () => {
       }
 
     
-    var dataCreatorMain = () =>{
+    var dataCreatorMain = async () =>{
 
         let da = new Date();
 
@@ -93,8 +97,8 @@ app.listen(port, () => {
         if(marketCondn)
         {
             console.log('market started')
-            
-            indices.map((i) => {
+
+            let sum = (await indices).map((i) => {
                 getDataOnly(i);
             })
 
