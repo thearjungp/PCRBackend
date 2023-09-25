@@ -12,7 +12,7 @@ const Data = require("./models/data");
 const dataRoutes = require("./routes/data")
 const stockentryRoutes = require("./routes/stockentry")
 
-const { indices, URLChanger, getDataOnly } = require("./controllers/data")
+const { indices, URLChanger, getDataOnly, enabledStockNamesOnlyAsync} = require("./controllers/data")
 
 // DB Connection
 mongoose.connect('mongodb://localhost:27017/PCR').then(() => {
@@ -98,7 +98,7 @@ app.listen(port, () => {
         {
             console.log('market started')
 
-            let sum = (await indices).map((i) => {
+            let sum = (await enabledStockNamesOnlyAsync()).map((i) => {
                 getDataOnly(i);
             })
 

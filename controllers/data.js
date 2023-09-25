@@ -100,7 +100,7 @@ var createData = (data) => {
 const fetchSingleData = async (req, res) => {
 
 
-    if((await indices).indexOf(req.symbol) == -1)
+    if((await enabledStockNamesOnlyAsync()).indexOf(req.symbol) == -1)
     {
         console.log('CANNOT FETCH DATA OF STOCK OR INDEX IF DISABLED')
         return;
@@ -221,4 +221,4 @@ const getCookieValueOnly = (cookie) =>
 }
 
 
-module.exports = { indices, URLChanger, fetchSingleData, dropDatabase, getDataForSymbol, readSymbol, getDataOnly};
+module.exports = { indices, URLChanger, fetchSingleData, dropDatabase, getDataForSymbol, readSymbol, getDataOnly, enabledStockNamesOnlyAsync};
